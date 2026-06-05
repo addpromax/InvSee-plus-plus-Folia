@@ -44,7 +44,6 @@ import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
 import java.io.IOException;
@@ -96,15 +95,21 @@ public class InvseeImpl implements InvseePlatform {
             }
         }, plugin);
 
-        new BukkitRunnable() {
+        // Use the abstracted Scheduler instead of BukkitRunnable to support Folia.
+        // We poll every tick until the network server is ready, then inject the handler and stop.
+        final Runnable[] taskHolder = new Runnable[1];
+        taskHolder[0] = new Runnable() {
             @Override
             public void run() {
                 if (server.getNetworkServer() != null) {
                     GlowstoneHacks.injectWindowClickHandler(server);
-                    cancel();
+                    // stop repeating by not rescheduling
+                } else {
+                    scheduler.executeLaterGlobal(taskHolder[0], 1L);
                 }
             }
-        }.runTaskTimer(plugin, 0, 1);
+        };
+        scheduler.executeLaterGlobal(taskHolder[0], 0L);
     }
 
     @Override

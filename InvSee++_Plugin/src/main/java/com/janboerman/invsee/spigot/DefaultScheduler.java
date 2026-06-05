@@ -45,11 +45,7 @@ public class DefaultScheduler implements Scheduler {
 
     @Override
     public void executeAsync(Runnable task) {
-        if (!plugin.getServer().isPrimaryThread()) {
-            task.run();
-        } else {
-            plugin.getServer().getScheduler().runTaskAsynchronously(plugin, task);
-        }
+        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, task);
     }
 
     @Override
